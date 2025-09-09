@@ -14,5 +14,8 @@ public class SpringBootRedisCacheApplication {
 }
 
 /**
+ * Steps:
+ * 	Run: D:\dev\github\springboot-postgresdb-rediscache\Redis-x64-3.0.504\redis-server.exe
  * SwaggerURL: http://localhost:8080/swagger-ui.html
+ * Observe data changes in Redis Desktop Manager and DBeaver (PostgreSQL)
  */
