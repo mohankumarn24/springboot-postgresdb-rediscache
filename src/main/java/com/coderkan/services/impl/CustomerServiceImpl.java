@@ -17,8 +17,8 @@ public class CustomerServiceImpl implements CustomerService {
 	private CustomerRepository customerRepository;
 
 	@Override
-	@CachePut(value = "customer", key = "#result.id")
 	@CacheEvict(value = "customers", allEntries = true)
+	@CachePut(value = "customer", key = "#result.id")
 	public Customer add(Customer customer) {
 		return this.customerRepository.save(customer);
 	}
@@ -38,9 +38,8 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	// TODO: not working
-	// @CachePut(value = "customer", key = "#id")
-	// @CacheEvict(value = "customers", allEntries = true)
+	@CacheEvict(value = "customers", allEntries = true) //works
+	@CachePut(value = "customer", key = "#result.id")
 	public Customer update(Customer customer) {
 		Optional<Customer> optCustomer = customerRepository.findById(customer.getId());
 		if (!optCustomer.isPresent()) {
@@ -54,7 +53,6 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	// @CacheEvict(value = {"customer", "customers"}, key = "#id")
 	@Caching(evict = {@CacheEvict(value = "customer", key = "#id"),
 				      @CacheEvict(value = "customers", allEntries = true)})
 	public void delete(long id) {
