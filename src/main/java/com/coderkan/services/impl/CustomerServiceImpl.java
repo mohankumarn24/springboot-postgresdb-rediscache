@@ -24,7 +24,7 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	@Cacheable(value = "customer", key = "#id", unless = "#result == null")
+	@Cacheable(value = "customer", key = "#id", unless = "#result == null")	// if result == null -> don't cache
 	public Customer getCustomerById(long id) {
 		// waitSomeTime();
 		return this.customerRepository.findById(id).orElse(null);
