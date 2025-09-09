@@ -40,9 +40,12 @@ spring:
 spring:
   profiles: dev
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
+    # url: jdbc:postgresql://localhost:5432/postgres
+    # username: postgres
+    # password: ekoloji
+    url: jdbc:postgresql://localhost:5432/redis
     username: postgres
-    password: ekoloji
+    password: Password1
 server:
   port: 8080
 

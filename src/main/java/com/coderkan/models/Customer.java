@@ -11,11 +11,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Entity
-@Table(name = "customer", schema = "public")
+// @Table(name = "customer", schema = "public")
+@Table(name = "customer", schema = "myschema")
 public class Customer {
 
 	@Id
@@ -34,5 +35,4 @@ public class Customer {
 	private String postalCode;
 
 	private String country;
-
 }

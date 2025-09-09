@@ -20,5 +20,4 @@ public class StartupListener implements ApplicationListener<ContextRefreshedEven
 			System.out.println(n);
 		});
 	}
-
 }
