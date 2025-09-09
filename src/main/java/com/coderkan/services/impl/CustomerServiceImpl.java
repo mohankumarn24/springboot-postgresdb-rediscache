@@ -3,10 +3,7 @@ package com.coderkan.services.impl;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
+import org.springframework.cache.annotation.*;
 import org.springframework.stereotype.Service;
 import com.coderkan.models.Customer;
 import com.coderkan.repositories.CustomerRepository;
@@ -20,47 +17,71 @@ public class CustomerServiceImpl implements CustomerService {
 	private CustomerRepository customerRepository;
 
 	@Override
-	@CacheEvict(cacheNames = "customers", allEntries = true)
+	@CachePut(value = "customer", key = "#result.id")
+	@CacheEvict(value = "customers", allEntries = true)
 	public Customer add(Customer customer) {
 		return this.customerRepository.save(customer);
 	}
 
 	@Override
-	@Cacheable(cacheNames = "customer", key = "#id", unless = "#result == null")
+	@Cacheable(value = "customer", key = "#id", unless = "#result == null")
 	public Customer getCustomerById(long id) {
 		// waitSomeTime();
 		return this.customerRepository.findById(id).orElse(null);
 	}
 
 	@Override
-	@Cacheable(cacheNames = "customers")
+	@Cacheable(value = "customers")
 	public List<Customer> getAll() {
 		// waitSomeTime();
 		return this.customerRepository.findAll();
 	}
 
 	@Override
-	@CacheEvict(cacheNames = "customers", allEntries = true)
+	// TODO: not working
+	// @CachePut(value = "customer", key = "#id")
+	// @CacheEvict(value = "customers", allEntries = true)
 	public Customer update(Customer customer) {
-		Optional<Customer> optCustomer = this.customerRepository.findById(customer.getId());
+		Optional<Customer> optCustomer = customerRepository.findById(customer.getId());
 		if (!optCustomer.isPresent()) {
 			return null;
 		}
 		Customer repCustomer = optCustomer.get();
 		repCustomer.setName(customer.getName());
-		repCustomer.setContactName(customer.getContactName());
-		repCustomer.setAddress(customer.getAddress());
-		repCustomer.setCity(customer.getCity());
-		repCustomer.setPostalCode(customer.getPostalCode());
-		repCustomer.setCountry(customer.getCountry());
-		return this.customerRepository.save(repCustomer);
+		repCustomer.setAge(customer.getAge());
+		repCustomer.setEmail(customer.getEmail());
+		return customerRepository.save(repCustomer);
 	}
 
 	@Override
-	@Caching(evict = {@CacheEvict(cacheNames = "customer", key = "#id"),
-			@CacheEvict(cacheNames = "customers", allEntries = true)})
+	// @CacheEvict(value = {"customer", "customers"}, key = "#id")
+	@Caching(evict = {@CacheEvict(value = "customer", key = "#id"),
+				      @CacheEvict(value = "customers", allEntries = true)})
 	public void delete(long id) {
 		this.customerRepository.deleteById(id);
+	}
+
+	@Override
+	@Cacheable(value = "customersByEmail", key = "#email")
+	public Optional<Customer> getCustomerByEmail(String email) {
+		System.out.println("Fetching customers from database for email: " + email);
+		return customerRepository.findByEmail(email);
+	}
+
+	@Override
+	public List<Customer> searchCustomersByName(String name) {
+		return customerRepository.findByNameContainingIgnoreCase(name);
+	}
+
+	@Override
+	public List<Customer> getCustomersByAgeRange(Integer minAge, Integer maxAge) {
+		return customerRepository.findByAgeBetween(minAge, maxAge);
+	}
+
+	@Override
+	@CacheEvict(value = {"customer", "customers", "customersByEmail"}, allEntries = true)
+	public void clearCache() {
+		System.out.println("All caches cleared");
 	}
 
 	private void waitSomeTime() {
