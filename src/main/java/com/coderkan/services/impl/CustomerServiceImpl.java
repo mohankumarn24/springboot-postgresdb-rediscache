@@ -38,7 +38,7 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	@CacheEvict(value = "customers", allEntries = true) //works
+	@CacheEvict(value = "customers", allEntries = true)
 	@CachePut(value = "customer", key = "#result.id")
 	public Customer update(Customer customer) {
 		Optional<Customer> optCustomer = customerRepository.findById(customer.getId());

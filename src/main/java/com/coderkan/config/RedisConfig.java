@@ -36,6 +36,14 @@ public class RedisConfig {
 	@Value("${spring.redis.port}")
 	private int redisPort;
 
+	@PostConstruct
+	public void clearCache() {
+		System.out.println("In Clear Cache");
+		Jedis jedis = new Jedis(redisHost, redisPort, 1000);
+		jedis.flushAll();
+		jedis.close();
+	}
+
 	@Bean
 	public RedisTemplate<String, Serializable> redisCacheTemplate(LettuceConnectionFactory redisConnectionFactory) {
 		RedisTemplate<String, Serializable> template = new RedisTemplate<>();
@@ -53,13 +61,5 @@ public class RedisConfig {
 				.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
 		RedisCacheManager redisCacheManager = RedisCacheManager.builder(factory).cacheDefaults(redisCacheConfiguration).build();
 		return redisCacheManager;
-	}
-
-	@PostConstruct
-	public void clearCache() {
-		System.out.println("In Clear Cache");
-		Jedis jedis = new Jedis(redisHost, redisPort, 1000);
-		jedis.flushAll();
-		jedis.close();
 	}
 }
