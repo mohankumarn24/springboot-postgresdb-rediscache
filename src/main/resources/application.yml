@@ -43,9 +43,9 @@ spring:
     # url: jdbc:postgresql://localhost:5432/postgres
     # username: postgres
     # password: ekoloji
-    url: jdbc:postgresql://localhost:5432/redis
+    url: jdbc:postgresql://localhost:5432/mydb
     username: postgres
-    password: Password1
+    password: password
 server:
   port: 8080
 

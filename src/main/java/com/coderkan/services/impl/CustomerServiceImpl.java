@@ -18,13 +18,15 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	@CacheEvict(value = "customers", allEntries = true)
-	@CachePut(value = "customer", key = "#result.id")
+	@CachePut(value = "customer", key = "#result.id", condition = "#result != null")
 	public Customer add(Customer customer) {
 		return this.customerRepository.save(customer);
 	}
 
+	// sync=true ensures only one thread at a time loads a missing cache entry for a given key.
+	// Other threads wait for the first thread to finish and then get the cached value. Prevents cache stampede/avalanche
 	@Override
-	@Cacheable(value = "customer", key = "#id", unless = "#result == null")	// if result == null -> don't cache
+	@Cacheable(value = "customer", key = "#id", unless = "#result == null", sync = true)	// if result == null -> don't cache
 	public Customer getCustomerById(long id) {
 		// waitSomeTime();
 		return this.customerRepository.findById(id).orElse(null);
@@ -33,7 +35,6 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	@Cacheable(value = "customers")
 	public List<Customer> getAll() {
-		// waitSomeTime();
 		return this.customerRepository.findAll();
 	}
 
@@ -41,20 +42,23 @@ public class CustomerServiceImpl implements CustomerService {
 	@CacheEvict(value = "customers", allEntries = true)
 	@CachePut(value = "customer", key = "#result.id")
 	public Customer update(Customer customer) {
-		Optional<Customer> optCustomer = customerRepository.findById(customer.getId());
-		if (!optCustomer.isPresent()) {
-			return null;
-		}
-		Customer repCustomer = optCustomer.get();
-		repCustomer.setName(customer.getName());
-		repCustomer.setAge(customer.getAge());
-		repCustomer.setEmail(customer.getEmail());
-		return customerRepository.save(repCustomer);
+        return customerRepository.findById(customer.getId())
+                .map(existing -> {
+                    existing.setName(customer.getName());
+                    existing.setAge(customer.getAge());
+                    existing.setEmail(customer.getEmail());
+                    return customerRepository.save(existing);
+                })
+                .orElseThrow(() -> new RuntimeException("Customer with id " + customer.getId() + " not found"));
+                // .orElse(null);
 	}
 
 	@Override
-	@Caching(evict = {@CacheEvict(value = "customer", key = "#id"),
-				      @CacheEvict(value = "customers", allEntries = true)})
+	@Caching(evict = {
+						@CacheEvict(value = "customer", key = "#id"),
+						@CacheEvict(value = "customers", allEntries = true)
+					}
+			)
 	public void delete(long id) {
 		this.customerRepository.deleteById(id);
 	}
@@ -81,14 +85,12 @@ public class CustomerServiceImpl implements CustomerService {
 	public void clearCache() {
 		System.out.println("All caches cleared");
 	}
-
-	private void waitSomeTime() {
-		System.out.println("Long Wait Begin");
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Long Wait End");
-	}
 }
+
+/*
+Behavior of sync=true: 
+ - Thread A requests key X. Cache miss. Thread A loads DB.
+ - Thread B requests key X at the same time. Cache miss. Thread B waits for Thread A.
+ - Once Thread A finishes and stores the value in cache, Thread B retrieves it from the cache.
+ - sync=true, only works for the same cache key. Different keys are not synchronized.
+*/
